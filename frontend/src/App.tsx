@@ -1,63 +1,84 @@
 import { Comment, Delete } from "@mui/icons-material";
-import { Button, IconButton, Input, List, ListItem, ListItemButton, ListItemText, TextField, Typography } from "@mui/material";
-import { useState } from "react";
+import { Button, Container, IconButton, Input, List, ListItem, ListItemButton, ListItemText, TextField, Typography } from "@mui/material";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 type Todo = {
+  id: string;
   content: string;
   done: boolean;
 }
 
+const BACKEND_BASE_URL = "http://localhost:8080"
+const TODO_RESOURCE_URL = `${BACKEND_BASE_URL}/todos`
+
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([
-    {
-      content: "Ne pas perdre à mario kart",
-      done: false,
-    },
-    {
-      content: "Donner à manger au chat",
-      done: false,
-    },
-    {
-      content: "Ne rien faire",
-      done: true,
-    }
-  ])
+  const [todos, setTodos] = useState<Todo[]>([])
+
+  useEffect(() => {
+    axios.get(TODO_RESOURCE_URL)
+      .then((response) => response.data)
+      .then((todoList) => setTodos(todoList))
+  }, [])
+
   const [newTodoContent, setNewTodoContent] = useState("")
 
-  function handleTodoClick(index: number) {
+  function handleTodoSwapDone(index: number) {
     const newTodos = [...todos]
     newTodos[index].done = !newTodos[index].done
 
-    setTodos(newTodos)
+
+
+
+    const todoId = todos[index].id
+
+    axios.put(`${TODO_RESOURCE_URL}/${todoId}`, newTodos[index])
+      .then(() => {
+        setTodos(newTodos)
+      })
   }
 
   function handleTodoDelete(index: number) {
-    const newTodos = [...todos]
-    newTodos.splice(index, 1);
+    const todoId = todos[index].id
 
-    setTodos(newTodos)
+    axios.delete(`${TODO_RESOURCE_URL}/${todoId}`)
+      .then(() => {
+        const newTodos = [...todos]
+        newTodos.splice(index, 1);
+
+        setTodos(newTodos)
+      })
   }
 
   function addTodo() {
-    const newTodos = [...todos]
-
-    newTodos.push({
+    const newTodo = {
       content: newTodoContent,
       done: false,
-    })
+    }
 
-    setNewTodoContent("")
-    setTodos(newTodos)
+    axios.post(TODO_RESOURCE_URL, newTodo)
+      .then((response) => response.data)
+      .then((todo) => {
+
+        const newTodos = [...todos]
+        newTodos.push(todo)
+
+        setNewTodoContent("")
+        setTodos(newTodos)
+      })
+      .catch((error) => {
+        alert("Erreur: " + error.message)
+      })
   }
 
   return (
-    <>
+    <Container maxWidth="sm">
       <Typography variant="h3">Ma todo-list</Typography>
       <List>
         <ListItem>
           <TextField variant="standard" fullWidth onKeyUp={event => {
-              if (event.key == 'Enter') addTodo();
-            }} onChange={(e) => setNewTodoContent(e.target.value)} value={newTodoContent}></TextField>
+            if (event.key == 'Enter') addTodo();
+          }} onChange={(e) => setNewTodoContent(e.target.value)} value={newTodoContent}></TextField>
         </ListItem>
         {
           todos.map((todo, index) => (
@@ -73,7 +94,7 @@ function App() {
               }
               disablePadding
             >
-              <ListItemButton onClick={() => handleTodoClick(index)}>
+              <ListItemButton onClick={() => handleTodoSwapDone(index)}>
                 <ListItemText sx={{
                   textDecorationLine: todo.done
                     ? 'line-through'
@@ -84,7 +105,7 @@ function App() {
           ))
         }
       </List>
-    </>
+    </Container>
   )
 }
 
