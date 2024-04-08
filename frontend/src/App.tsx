@@ -59,7 +59,6 @@ function App() {
     axios.post(TODO_RESOURCE_URL, newTodo)
       .then((response) => response.data)
       .then((todo) => {
-
         const newTodos = [...todos]
         newTodos.push(todo)
 
@@ -67,7 +66,7 @@ function App() {
         setTodos(newTodos)
       })
       .catch((error) => {
-        alert("Erreur: " + error.message)
+        alert(`Erreur (${error.response.status}): ${error.response.data.message}`)
       })
   }
 

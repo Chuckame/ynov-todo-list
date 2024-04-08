@@ -2,4 +2,8 @@ spring:
   data:
     mongodb:
       database: todos
+server:
+  error:
+    include-message: always
+
 # set env var for mongodb connection: SPRING_DATA_MONGODB_URI=mongodb+srv://user:pass@host/?retryWrites=true&w=majority&appName=Cluster0
